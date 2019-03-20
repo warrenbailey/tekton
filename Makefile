@@ -1,31 +1,33 @@
 CHART_REPO := http://jenkins-x-chartmuseum:8080
 NAME := tekton
 OS := $(shell uname)
-VERSION := $(shell cat ./VERSION)
 
-init: 
+CHARTMUSEUM_CREDS_USR := $(shell cat /builder/home/basic-auth-user.json)
+CHARTMUSEUM_CREDS_PSW := $(shell cat /builder/home/basic-auth-pass.json)
+
+init:
 	helm init --client-only
 
 setup: init
-	helm repo add jenkinsxio http://chartmuseum.jenkins-x.io 
+	helm repo add jenkinsxio http://chartmuseum.jenkins-x.io
 
 build: clean setup
-	helm dependency build
-	helm lint
+	helm dependency build tekton
+	helm lint tekton
 
 install: clean build
-	helm upgrade ${NAME} . --install
+	helm upgrade ${NAME} tekton --install
 
 upgrade: clean build
-	helm upgrade ${NAME} . --install
+	helm upgrade ${NAME} tekton --install
 
 delete:
-	helm delete --purge ${NAME}
+	helm delete --purge ${NAME} tekton
 
 clean:
-	rm -rf charts
-	rm -rf ${NAME}*.tgz
-	rm -rf requirements.lock
+	rm -rf tekton/charts
+	rm -rf tekton/${NAME}*.tgz
+	rm -rf tekton/requirements.lock
 
 release: clean build
 ifeq ($(OS),Darwin)
